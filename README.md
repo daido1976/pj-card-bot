@@ -1,17 +1,14 @@
 # projectabot
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that A Probot app
+A GitHub App built with [Probot](https://github.com/probot/probot).
 
-## Setup
+
+
+## Development
+
+See. https://probot.github.io/docs/development/#running-the-app-locally
 
 ```sh
-# Install dependencies
-npm install
-
-# Run with hot reload
-npm run build:watch
-
-# Compile and run
-npm run build
-npm run start
+# build & watch
+$ npm run dev
 ```
