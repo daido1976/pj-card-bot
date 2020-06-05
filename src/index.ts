@@ -1,15 +1,19 @@
 import { Application } from "probot"; // eslint-disable-line no-unused-vars
 
-export = (app: Application) => {
-  app.on("issues.opened", async (context) => {
-    const issueComment = context.issue({
-      body: "Thanks for opening this issue!",
-    });
-    await context.github.issues.createComment(issueComment);
-  });
-  // For more information on building apps:
-  // https://probot.github.io/docs/
+const addComment = `
+  mutation comment($id: ID!, $body: String!) {
+    addComment(input: {subjectId: $id, body: $body}) {
+      clientMutationId
+    }
+  }
+`;
 
-  // To get your app running against GitHub, see:
-  // https://probot.github.io/docs/development/
+export = (app: Application) => {
+  app.on("issues.labeled", async (context) => {
+    console.log("labeled!!!", context);
+    context.github.graphql(addComment, {
+      id: context.payload.issue.node_id,
+      body: "Hello world!",
+    });
+  });
 };
