@@ -42,9 +42,11 @@ const PROJECT_FRAGMENT = `
 //   }
 // `;
 
+// 本当は ... on PullRequest もつけないといけないけどどうせ改善するのでスキップ
+// repository の node の id 検索からいきたい（pr or issue の id は webhook から取れるため）
 const getAllProjectCards = `
-  query getAllProjectCards($issueUrl: URI!) {
-    resource(url: $issueUrl) {
+  query getAllProjectCards($id: ID!) {
+    node(id: $id) {
       ... on Issue {
         id
         repository {
@@ -73,16 +75,16 @@ const getAllProjectCards = `
 
 export = (app: Application) => {
   const logger = app.log.child({ name: "projectabot" });
-  app.on("issues.labeled", async (context) => {
+  app.on(["issues.labeled", "pull_request.labeled"], async (context) => {
     logger.info("labeled!!!", context);
-    const issueUrl = context.payload.issue.html_url;
-    const issueId = context.payload.issue.node_id;
-    const { resource }: any = await context.github.graphql(getAllProjectCards, {
-      issueUrl: issueUrl,
+    const issueOrPrId =
+      context.payload.issue?.node_id || context.payload.pull_request.node_id;
+    const { node }: any = await context.github.graphql(getAllProjectCards, {
+      id: issueOrPrId,
     });
 
-    logger.info("resource!!!", resource);
-    const projects = resource.repository.projects.nodes;
+    logger.info("node!!!", node);
+    const projects = node.repository.projects.nodes;
     const columns: any = [];
     projects.forEach((pj: any) => {
       logger.info("project!!!", pj);
@@ -102,7 +104,7 @@ export = (app: Application) => {
         }
       }
     `,
-      { contentId: issueId, columnId: columns[0].id }
+      { contentId: issueOrPrId, columnId: columns[0].id }
     );
   });
 };
