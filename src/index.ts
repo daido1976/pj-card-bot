@@ -20,6 +20,7 @@ const PROJECT_FRAGMENT = `
   }
 `;
 
+// FIXME: getAllProjectColumns かもしれない
 const getAllProjectCards = `
   query getAllProjectCards($id: ID!) {
     node(id: $id) {
@@ -59,9 +60,12 @@ export = (app: Application) => {
     });
 
     logger.info("node!!!", node);
-    // TODO: Organization の時は node.owner.projects.nodes にする
-    const projects = node.projects.nodes;
+    // Organization の時は node.owner.projects.nodes にする
+    // NOTE: getAllProjectCards の query で ... on Organization で owner の projects を取得しているため、
+    //   User の時は node.owner.projects がない
+    const projects = node.owner.projects?.nodes || node.projects.nodes;
     const columns: any = [];
+    // User の時も対象の repository が複数の projects を持つ場合あり
     projects.forEach((pj: any) => {
       logger.info("project!!!", pj);
       pj.columns.nodes.forEach((col: any) => {
