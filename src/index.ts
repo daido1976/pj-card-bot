@@ -42,30 +42,25 @@ const PROJECT_FRAGMENT = `
 //   }
 // `;
 
-// 本当は ... on PullRequest もつけないといけないけどどうせ改善するのでスキップ
-// repository の node の id 検索からいきたい（pr or issue の id は webhook から取れるため）
 const getAllProjectCards = `
   query getAllProjectCards($id: ID!) {
     node(id: $id) {
-      ... on Issue {
-        id
-        repository {
-          owner {
-            url
-            ${"" /* Projects can be attached to an Organization... */}
-            ... on Organization {
-              projects(first: 10, states: [OPEN]) {
-                nodes {
-                  ${PROJECT_FRAGMENT}
-                }
+      ... on Repository  {
+        owner {
+          url
+          ${"" /* Projects can be attached to an Organization... */}
+          ... on Organization {
+            projects(first: 10, states: [OPEN]) {
+              nodes {
+                ${PROJECT_FRAGMENT}
               }
             }
           }
-          ${"" /* ... or on a Repository */}
-          projects(first: 10, states: [OPEN]) {
-            nodes {
-              ${PROJECT_FRAGMENT}
-            }
+        }
+        ${"" /* ... or on a Repository for User */}
+        projects(first: 10, states: [OPEN]) {
+          nodes {
+            ${PROJECT_FRAGMENT}
           }
         }
       }
@@ -79,12 +74,15 @@ export = (app: Application) => {
     logger.info("labeled!!!", context);
     const issueOrPrId =
       context.payload.issue?.node_id || context.payload.pull_request.node_id;
+    const repoId = context.payload.repository.node_id;
+
     const { node }: any = await context.github.graphql(getAllProjectCards, {
-      id: issueOrPrId,
+      id: repoId,
     });
 
     logger.info("node!!!", node);
-    const projects = node.repository.projects.nodes;
+    // TODO: Organization の時は node.owner.projects.nodes にする
+    const projects = node.projects.nodes;
     const columns: any = [];
     projects.forEach((pj: any) => {
       logger.info("project!!!", pj);
@@ -95,7 +93,7 @@ export = (app: Application) => {
     });
     logger.info("multiple columns!!!", columns);
 
-    // すでに追加済みの時は Project already has the associated issue のエラーが出る
+    // TODO: すでに追加済みの時は Project already has the associated issue のエラーが出るのでハンドリングする
     await context.github.graphql(
       `
       mutation createCard($contentId: ID!, $columnId: ID!) {
