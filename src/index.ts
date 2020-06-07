@@ -20,28 +20,6 @@ const PROJECT_FRAGMENT = `
   }
 `;
 
-// const getCardAndColumnAutomationCards = `
-//   query getCardAndColumnAutomationCards($issueUrl: URI!) {
-//     resource(url: $issueUrl) {
-//       ... on Issue {
-//         projectCards(first: 10) {
-//           nodes {
-//             id
-//             url
-//             column {
-//               name
-//               id
-//             }
-//             project {
-//               ${PROJECT_FRAGMENT}
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-// `;
-
 const getAllProjectCards = `
   query getAllProjectCards($id: ID!) {
     node(id: $id) {
