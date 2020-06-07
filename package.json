@@ -1,12 +1,12 @@
 {
-  "name": "projectabot",
+  "name": "pj-card-bot",
   "version": "1.0.0",
   "private": true,
   "description": "A Probot app",
   "author": "Daido Shota",
-  "repository": "https://github.com/daido1976/projectabot.git",
-  "homepage": "https://github.com/daido1976/projectabot",
-  "bugs": "https://github.com/daido1976/projectabot/issues",
+  "repository": "https://github.com/daido1976/pj-card-bot.git",
+  "homepage": "https://github.com/daido1976/pj-card-bot",
+  "bugs": "https://github.com/daido1976/pj-card-bot/issues",
   "keywords": [
     "probot",
     "github",

@@ -1,4 +1,4 @@
-# projectabot
+# pj-card-bot
 
 A GitHub App built with [Probot](https://github.com/probot/probot).
 

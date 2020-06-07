@@ -68,7 +68,7 @@ const getAllProjectCards = `
 `;
 
 export = (app: Application) => {
-  const logger = app.log.child({ name: "projectabot" });
+  const logger = app.log.child({ name: "pj-card-bot" });
   autoCommands.forEach(({ webhookName, ruleName, ruleMatcher }) => {
     app.on(webhookName, async (context) => {
       logger.info("labeled!!!", context);
