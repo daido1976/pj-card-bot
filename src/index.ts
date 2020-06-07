@@ -1,5 +1,24 @@
-import { Application } from "probot"; // eslint-disable-line no-unused-vars
+import { Application, Context } from "probot";
 import { parseMarkdownToRules } from "./parser";
+
+const autoCommands = [
+  {
+    ruleName: "added_label",
+    webhookName: "issues.labeled",
+    ruleMatcher: (context: Context, ruleArgs: string[]): boolean => {
+      const labelName = context.payload.label.name;
+      return ruleArgs.includes(labelName);
+    },
+  },
+  {
+    ruleName: "added_label",
+    webhookName: "pull_request.labeled",
+    ruleMatcher: (context: Context, ruleArgs: string[]): boolean => {
+      const labelName = context.payload.label.name;
+      return ruleArgs.includes(labelName);
+    },
+  },
+];
 
 const PROJECT_FRAGMENT = `
   name
