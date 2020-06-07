@@ -1,6 +1,6 @@
-import { parseMarkdown } from "../src/parser";
+import { parseMarkdownToRules } from "../src/parser";
 
-describe("parseMarkdown", () => {
+describe("parseMarkdownToRules", () => {
   const note: string =
     "###### Automation Rules\r\n" +
     "\r\n" +
@@ -26,6 +26,6 @@ describe("parseMarkdown", () => {
   ];
 
   it("parses markdown to rules", () => {
-    expect(parseMarkdown(note)).toEqual(results);
+    expect(parseMarkdownToRules(note)).toEqual(results);
   });
 });

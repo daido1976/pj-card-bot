@@ -1,6 +1,6 @@
 import marked from "marked";
 
-export const parseMarkdown = (
+export const parseMarkdownToRules = (
   note: string
 ): { ruleName: string; ruleArgs: string[] }[] => {
   const rules: { ruleName: string; ruleArgs: string[] }[] = [];
