@@ -66,11 +66,17 @@ export = (app: Application) => {
     const projects = node.owner.projects?.nodes || node.projects.nodes;
     const columns: any = [];
     // User の時も対象の repository が複数の projects を持つ場合あり
-    projects.forEach((pj: any) => {
-      logger.info("project!!!", pj);
-      pj.columns.nodes.forEach((col: any) => {
-        logger.info("column!!!", col);
-        columns.push(col);
+    projects.forEach((project: any) => {
+      logger.info("project!!!", project);
+      project.columns.nodes.forEach((column: any) => {
+        logger.info("column!!!", column);
+        const lastCard = column.lastCards.nodes[0];
+        columns.push({
+          column,
+          // TODO: lastCard を parse して ruleName (eg. 'added_label', 'new_issue' ) と ruleArgs (eg. ['dependencies', 'bug']) を抜き出す
+          ruleName: "",
+          ruleArgs: [],
+        });
       });
     });
     logger.info("multiple columns!!!", columns);
