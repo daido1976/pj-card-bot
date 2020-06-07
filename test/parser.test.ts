@@ -7,11 +7,25 @@ describe("parseMarkdown", () => {
     "<!-- Documentation: https://github.com/philschatz/project-bot -->\r\n" +
     "\r\n" +
     "- `added_label` **wontfix**\r\n" +
-    "- `new_pullrequest` **repo1** **repo2**";
+    "- `new_pullrequest` **repo1** **repo2**\r\n" +
+    "- `new_issue`";
 
-  const results: any = note;
+  const results: { ruleName: string; ruleArgs: string[] }[] = [
+    {
+      ruleName: "added_label",
+      ruleArgs: ["wontfix"],
+    },
+    {
+      ruleName: "new_pullrequest",
+      ruleArgs: ["repo1", "repo2"],
+    },
+    {
+      ruleName: "new_issue",
+      ruleArgs: [],
+    },
+  ];
 
-  it("parses markdown", () => {
+  it("parses markdown to rules", () => {
     expect(parseMarkdown(note)).toEqual(results);
   });
 });
