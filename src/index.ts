@@ -1,4 +1,5 @@
 import { Application } from "probot"; // eslint-disable-line no-unused-vars
+import { parseMarkdownToRules } from "./parser";
 
 const PROJECT_FRAGMENT = `
   name
@@ -64,7 +65,7 @@ export = (app: Application) => {
     // NOTE: getAllProjectCards の query で ... on Organization で owner の projects を取得しているため、
     //   User の時は node.owner.projects がない
     const projects = node.owner.projects?.nodes || node.projects.nodes;
-    const columns: any = [];
+    const ruledColumns: any = [];
     // User の時も対象の repository が複数の projects を持つ場合あり
     projects.forEach((project: any) => {
       logger.info("project!!!", project);
@@ -72,15 +73,16 @@ export = (app: Application) => {
         logger.info("column!!!", column);
         const lastCard = column.lastCards.nodes[0];
         logger.info("lastCard!!!", lastCard);
-        columns.push({
-          column,
-          // TODO: lastCard を parse して ruleName (eg. 'added_label', 'new_issue' ) と ruleArgs (eg. ['dependencies', 'bug']) を抜き出す
-          ruleName: "",
-          ruleArgs: [],
-        });
+        const rules = lastCard?.note ? parseMarkdownToRules(lastCard.note) : [];
+        if (rules.length) {
+          ruledColumns.push({
+            column,
+            rules,
+          });
+        }
       });
     });
-    logger.info("multiple columns!!!", columns);
+    logger.info("ruledColumns!!!", ruledColumns);
 
     // TODO: すでに追加済みの時は Project already has the associated issue のエラーが出るのでハンドリングする
     await context.github.graphql(
