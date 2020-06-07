@@ -1,3 +1,7 @@
+// Added Comments
+// See. https://github.com/markedjs/marked/issues/1675
+// See. https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/marked
+
 // Type definitions for Marked 0.7
 // Project: https://github.com/markedjs/marked, https://marked.js.org
 // Definitions by: William Orr <https://github.com/worr>
@@ -236,6 +240,7 @@ declare namespace marked {
     | Tokens.Hr
     | Tokens.BlockquoteStart
     | Tokens.BlockquoteEnd
+    | Tokens.List
     | Tokens.ListStart
     | Tokens.LooseItemStart
     | Tokens.ListItemStart
@@ -280,6 +285,11 @@ declare namespace marked {
 
     interface BlockquoteEnd {
       type: "blockquote_end";
+    }
+
+    interface List {
+      type: "list";
+      ordered: boolean;
     }
 
     interface ListStart {
