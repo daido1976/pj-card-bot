@@ -71,6 +71,7 @@ export = (app: Application) => {
       project.columns.nodes.forEach((column: any) => {
         logger.info("column!!!", column);
         const lastCard = column.lastCards.nodes[0];
+        logger.info("lastCard!!!", lastCard);
         columns.push({
           column,
           // TODO: lastCard を parse して ruleName (eg. 'added_label', 'new_issue' ) と ruleArgs (eg. ['dependencies', 'bug']) を抜き出す
