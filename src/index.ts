@@ -104,14 +104,12 @@ export = (app: Application) => {
             : [];
 
           // Webhook イベントに対応する rule を見つける
-          const shouldApplyRule = rules.find(
-            ({ ruleName: rn }) => rn === ruleName
-          );
+          const rule = rules.find(({ ruleName: rn }) => rn === ruleName);
 
-          if (shouldApplyRule) {
+          if (rule) {
             autoRules.push({
               column,
-              ...shouldApplyRule,
+              ...rule,
             });
           }
         });
