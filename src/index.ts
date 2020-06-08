@@ -69,32 +69,46 @@ const getAllProjectCards = `
 
 export = (app: Application) => {
   const logger = app.log.child({ name: "pj-card-bot" });
+
   autoCommands.forEach(({ webhookName, ruleName, ruleMatcher }) => {
     app.on(webhookName, async (context) => {
-      logger.info("labeled!!!", context);
+      logger.info("webhookContext!!!", context);
+
+      const repoId = context.payload.repository.node_id;
       const issueOrPrId =
         context.payload.issue?.node_id || context.payload.pull_request.node_id;
-      const repoId = context.payload.repository.node_id;
 
       const { node }: any = await context.github.graphql(getAllProjectCards, {
         id: repoId,
       });
 
-      logger.info("node!!!", node);
-      // Organization の時は node.owner.projects.nodes にする
+      logger.info("repositoryNode!!!", node);
+
+      // Organization の時は Owner に紐づく projects、User の時は Repository に紐づく projects を取得する
+      //   User の時に Owner に紐づく projects を取得することもできるが、
+      //   https://github.com/daido1976?tab=projects のようなユーザに紐づく意図しない projects になってしまう
       // NOTE: getAllProjectCards の query で ... on Organization で owner の projects を取得しているため、
-      //   User の時は node.owner.projects がない
+      //   User の時は node.owner.projects が nullish になるためこう書ける
       const projects = node.owner.projects?.nodes || node.projects.nodes;
+
+      // 当該 Webhook イベントに対応する全ての自動化ルール
+      // （`issues.labeled` イベントなら projects 内にある Automation Rules の note に書かれた全ての `added_label` ルール）
+      //   後ほど context.payload の値が ruleArgs（ラベルやリポジトリ名の配列）に含まれているかを
+      //   ruleMatcher でチェックし、含まれていれば GitHub API を叩いてカード作成を行う
+      //   ※ ruleName でのフィルタと ruleArgs でのフィルタの二段階になっている
       const autoRules: {
         column: any;
         ruleName: string;
         ruleArgs: string[];
       }[] = [];
-      // User の時も対象の repository が複数の projects を持つ場合あり
+
+      // User の時も対象の Repository が複数の projects を持つ場合がある
       projects.forEach((project: any) => {
         logger.info("project!!!", project);
+
         project.columns.nodes.forEach((column: any) => {
           logger.info("column!!!", column);
+
           const lastCard = column.lastCards.nodes[0];
           logger.info("lastCard!!!", lastCard);
 
@@ -106,6 +120,7 @@ export = (app: Application) => {
           // Webhook イベントに対応する rule を見つける
           const rule = rules.find(({ ruleName: rn }) => rn === ruleName);
 
+          // Webhook イベントに対応する rule がある場合に、その rule のみを autoRules に追加する
           if (rule) {
             autoRules.push({
               column,
@@ -114,6 +129,7 @@ export = (app: Application) => {
           }
         });
       });
+
       logger.info("autoRules!!!", autoRules);
 
       // FIXME: forEach でかけるはず
