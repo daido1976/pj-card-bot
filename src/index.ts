@@ -42,8 +42,8 @@ const PROJECT_FRAGMENT = `
 
 // FIXME: getAllProjectColumns かもしれない
 const getAllProjectCards = `
-  query getAllProjectCards($id: ID!) {
-    node(id: $id) {
+  query getAllProjectCards($repositoryId: ID!) {
+    node(id: $repositoryId) {
       ... on Repository  {
         owner {
           url
@@ -74,22 +74,26 @@ export = (app: Application) => {
     app.on(webhookName, async (context) => {
       logger.info("webhookContext!!!", context);
 
-      const repoId = context.payload.repository.node_id;
+      const repositoryId = context.payload.repository.node_id;
       const issueOrPrId =
         context.payload.issue?.node_id || context.payload.pull_request.node_id;
 
-      const { node }: any = await context.github.graphql(getAllProjectCards, {
-        id: repoId,
-      });
+      const { node: repository }: any = await context.github.graphql(
+        getAllProjectCards,
+        {
+          repositoryId,
+        }
+      );
 
-      logger.info("repositoryNode!!!", node);
+      logger.info("repository!!!", repository);
 
       // Organization の時は Owner に紐づく projects、User の時は Repository に紐づく projects を取得する
       //   User の時に Owner に紐づく projects を取得することもできるが、
       //   https://github.com/daido1976?tab=projects のようなユーザに紐づく意図しない projects になってしまう
       // NOTE: getAllProjectCards の query で ... on Organization で owner の projects を取得しているため、
-      //   User の時は node.owner.projects が nullish になるためこう書ける
-      const projects = node.owner.projects?.nodes || node.projects.nodes;
+      //   User の時は repository.owner.projects が nullish になるためこう書ける
+      const projects =
+        repository.owner.projects?.nodes || repository.projects.nodes;
 
       // 当該 Webhook イベントに対応する全ての自動化ルール
       // （`issues.labeled` イベントなら projects 内にある Automation Rules の note に書かれた全ての `added_label` ルール）
