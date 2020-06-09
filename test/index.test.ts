@@ -44,8 +44,7 @@ describe("My Probot app", () => {
   beforeEach(() => {
     nock.disableNetConnect();
     probot = new Probot({ githubToken: "faketoken" });
-    const app = probot.load(myProbotApp);
-    app.app = () => "test";
+    probot.load(myProbotApp);
   });
 
   it("test1", async () => {
