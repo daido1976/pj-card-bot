@@ -69,10 +69,13 @@ const getAllProjectCards = `
 
 export = (app: Application) => {
   const logger = app.log.child({ name: "pj-card-bot" });
+  logger.info(`Starting up`);
 
   autoCommands.forEach(({ webhookName, ruleName, ruleMatcher }) => {
+    logger.trace(`Attaching listener for ${webhookName}`);
+
     app.on(webhookName, async (context) => {
-      logger.info("webhookContext!!!", context);
+      logger.trace(`Event received for ${webhookName}`);
 
       const repositoryId = context.payload.repository.node_id;
       const issueOrPrId =
