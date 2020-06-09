@@ -22,10 +22,13 @@
     "test:watch": "jest --watch --notify --notifyMode=change --coverage"
   },
   "dependencies": {
+    "graphql": "^15.1.0",
     "marked": "^1.1.0",
     "probot": "^9.5.3"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^1.15.1",
+    "@graphql-codegen/typescript": "^1.15.1",
     "@types/jest": "^25.1.0",
     "@types/marked": "^0.7.4",
     "@types/nock": "^11.1.0",
