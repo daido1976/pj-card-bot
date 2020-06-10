@@ -4,7 +4,7 @@ import { Probot } from "probot";
 import payload from "./mocks/issues.labeled.json";
 import { repositoryOnUser } from "./mocks/graphqlResponse";
 
-describe("My Probot app", () => {
+describe("PJ Card Bot integration tests", () => {
   let probot: any;
 
   beforeEach(() => {
@@ -13,7 +13,8 @@ describe("My Probot app", () => {
     probot.load(myProbotApp);
   });
 
-  it("test1", async () => {
+  it("Creates cards when labeled", async () => {
+    // query getAllProjectCards
     nock("https://api.github.com")
       .post("/graphql")
       .reply(200, { data: repositoryOnUser });
