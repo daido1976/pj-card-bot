@@ -122,7 +122,6 @@ export = (app: Application) => {
 
       logger.info("autoRules!!!", autoRules);
 
-      // FIXME: forEach でかけるはず
       for (const { column, ruleArgs } of autoRules) {
         if (ruleMatcher(context, ruleArgs)) {
           // TODO: すでに追加済みの時は Project already has the associated issue のエラーが出るのでハンドリングする
