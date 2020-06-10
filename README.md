@@ -1,6 +1,10 @@
 # <img src='assets/pj-card-bot-192x192.png' width='32' alt='pj-icon'> PJ Card Bot
 
-A GitHub App for automatically adding cards of Issue/Pull Request on a Project board built with [Probot](https://github.com/probot/probot).
+🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically adding cards of Issue/Pull Request on a Project board.
+
+## Installation
+
+Go to the [GitHub App page](https://github.com/apps/pj-card-bot) and click `Install` (or `Configure` if you already installed it).
 
 ## Development
 
