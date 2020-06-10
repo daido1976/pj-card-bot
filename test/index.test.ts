@@ -1,54 +1,29 @@
-// You can import your modules
-// import index from '../src/index'
-
 import nock from "nock";
-// Requiring our app implementation
 import myProbotApp from "../src";
 import { Probot } from "probot";
-// Requiring our fixtures
-import payload from "./fixtures/issues.opened.json";
-const issueCreatedBody = { body: "Thanks for opening this issue!" };
-const fs = require("fs");
-const path = require("path");
+import payload from "./mocks/issues.labeled.json";
+import { repositoryOnUser } from "./mocks/graphqlResponse";
 
-describe("My Probot app", () => {
+describe("PJ Card Bot integration tests", () => {
   let probot: any;
-  let mockCert: string;
-
-  beforeAll((done: Function) => {
-    fs.readFile(
-      path.join(__dirname, "fixtures/mock-cert.pem"),
-      (err: Error, cert: string) => {
-        if (err) return done(err);
-        mockCert = cert;
-        done();
-      }
-    );
-  });
 
   beforeEach(() => {
     nock.disableNetConnect();
-    probot = new Probot({ id: 123, cert: mockCert });
-    // Load our app into probot
+    probot = new Probot({ githubToken: "faketoken" });
     probot.load(myProbotApp);
   });
 
-  test("creates a comment when an issue is opened", async (done) => {
-    // Test that we correctly return a test token
+  it("Creates cards when labeled", async () => {
+    // query getAllProjectCards
     nock("https://api.github.com")
-      .post("/app/installations/2/access_tokens")
-      .reply(200, { token: "test" });
+      .post("/graphql")
+      .reply(200, { data: repositoryOnUser });
 
-    // Test that a comment is posted
-    nock("https://api.github.com")
-      .post("/repos/hiimbex/testing-things/issues/1/comments", (body: any) => {
-        done(expect(body).toMatchObject(issueCreatedBody));
-        return true;
-      })
-      .reply(200);
+    // mutation createCard
+    nock("https://api.github.com").post("/graphql").reply(200);
 
     // Receive a webhook event
-    await probot.receive({ name: "issues", payload });
+    await probot.receive({ name: "issues.labeled", payload });
   });
 
   afterEach(() => {
@@ -56,12 +31,3 @@ describe("My Probot app", () => {
     nock.enableNetConnect();
   });
 });
-
-// For more information about testing with Jest see:
-// https://facebook.github.io/jest/
-
-// For more information about using TypeScript in your tests, Jest recommends:
-// https://github.com/kulshekhar/ts-jest
-
-// For more information about testing with Nock see:
-// https://github.com/nock/nock
