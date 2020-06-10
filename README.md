@@ -23,15 +23,15 @@ To create an Automation Card, create a Card in a Project like this:
 ```md
 ###### Automation Rules
 
-<!-- Documentation: https://github.com/philschatz/project-bot -->
+<!-- Documentation: https://github.com/daido1976/pj-card-bot -->
 
-- `assigned_issue`
-- `closed_issue`
-- `added_label` **wontfix**
-- `new_pullrequest` **repo1** **repo2**
+- `added_label` **dependencies** **security**
+- `new_pullrequest` **repo-name1** **repo-name2**
+- `new_issue` **repo-name3** **repo-name4**
 ```
 
-Now, whenever any Issue that is assigned, or closed, or a `wontfix` label is added, or a new Pull Request is opened on the `repo1` or `repo2` repository will show up in this Column.
+Now, when the `dependencies` or `security` label is added, new card is adding to column in which the note is placed.
+And, when the new Pull Request is opened in `repo-name1` or `repo-name2`, new card is adding to column in which the note is placed in the same way.
 
 ## Development
 
