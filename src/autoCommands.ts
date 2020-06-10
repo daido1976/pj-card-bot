@@ -22,9 +22,8 @@ export const autoCommands = [
     webhookName: "issues.opened",
     ruleMatcher: (context: Context, ruleArgs: string[]): boolean => {
       if (ruleArgs.length > 0) {
-        // Verify that it matches one of the repositories listed
-        const repoNames = ruleArgs;
-        return repoNames.indexOf(context.payload.repository.name) >= 0;
+        const repoName = context.payload.repository.name;
+        return ruleArgs.includes(repoName);
       } else {
         return true;
       }
@@ -35,9 +34,8 @@ export const autoCommands = [
     webhookName: "pull_request.opened",
     ruleMatcher: (context: Context, ruleArgs: string[]): boolean => {
       if (ruleArgs.length > 0) {
-        // Verify that it matches one of the repositories listed
-        const repoNames = ruleArgs;
-        return repoNames.indexOf(context.payload.repository.name) >= 0;
+        const repoName = context.payload.repository.name;
+        return ruleArgs.includes(repoName);
       } else {
         return true;
       }
