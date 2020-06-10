@@ -1,24 +1,6 @@
-import { Application, Context } from "probot";
+import { Application } from "probot";
+import { autoCommands } from "./autoCommands";
 import { parseMarkdownToRules } from "./parser";
-
-const autoCommands = [
-  {
-    ruleName: "added_label",
-    webhookName: "issues.labeled",
-    ruleMatcher: (context: Context, ruleArgs: string[]): boolean => {
-      const labelName = context.payload.label.name;
-      return ruleArgs.includes(labelName);
-    },
-  },
-  {
-    ruleName: "added_label",
-    webhookName: "pull_request.labeled",
-    ruleMatcher: (context: Context, ruleArgs: string[]): boolean => {
-      const labelName = context.payload.label.name;
-      return ruleArgs.includes(labelName);
-    },
-  },
-];
 
 // TODO: gql ファイルに移す
 const PROJECT_FRAGMENT = `
@@ -140,7 +122,6 @@ export = (app: Application) => {
 
       logger.info("autoRules!!!", autoRules);
 
-      // FIXME: forEach でかけるはず
       for (const { column, ruleArgs } of autoRules) {
         if (ruleMatcher(context, ruleArgs)) {
           // TODO: すでに追加済みの時は Project already has the associated issue のエラーが出るのでハンドリングする
