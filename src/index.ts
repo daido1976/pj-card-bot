@@ -21,7 +21,6 @@ const autoCommands = [
 ];
 
 // TODO: gql ファイルに移す
-// `fs.readFileSync("./hoge.gql").toString();` で読み込む
 const PROJECT_FRAGMENT = `
   name
   id
