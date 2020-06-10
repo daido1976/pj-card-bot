@@ -18,7 +18,7 @@ Unlike the project-bot, the PJ Card Bot has the following specifications.
 
 ## Example
 
-To create an Automation Card, create a Card in a Project like this:
+The way to set the Automation Card is almost the same as the project-bot.
 
 ```md
 ###### Automation Rules
