@@ -2,7 +2,7 @@
 
 🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically adding cards of Issue/Pull Request on a Project board.
 
-This app is inspired by [philschatz/project-bot](https://github.com/philschatz/project-bot).
+This bot is inspired by [philschatz/project-bot](https://github.com/philschatz/project-bot).
 
 ⚠️ **This bot doesn't work on Organization yet.**
 
