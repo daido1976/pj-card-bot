@@ -3,7 +3,7 @@ import { parseMarkdownToRules } from "../src/parser";
 describe("parseMarkdownToRules", () => {
   describe("when note is valid", () => {
     const note: string =
-      "###### Automation Rules\r\n" +
+      "###### PJ Card Bot Rules\r\n" +
       "\r\n" +
       "<!-- Documentation: https://github.com/philschatz/project-bot -->\r\n" +
       "\r\n" +
