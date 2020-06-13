@@ -31,7 +31,7 @@ describe("parseMarkdownToRules", () => {
     });
   });
 
-  describe("when note has invalid title", () => {
+  describe("when note has invalid heading", () => {
     const note: string =
       "###### Automation Rules\r\n" +
       "\r\n" +
