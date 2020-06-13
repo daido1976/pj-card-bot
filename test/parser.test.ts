@@ -48,6 +48,19 @@ describe("parseMarkdownToRules", () => {
     });
   });
 
+  describe("when note does not have heading", () => {
+    const note: string =
+      "- `added_label` **wontfix**\r\n" +
+      "- `new_pullrequest` **repo1** **repo2**\r\n" +
+      "- `new_issue`";
+
+    const results: { ruleName: string; ruleArgs: string[] }[] = [];
+
+    it("returns empty array", () => {
+      expect(parseMarkdownToRules(note)).toEqual(results);
+    });
+  });
+
   describe("when note has invalid list", () => {
     const note: string =
       "###### PJ Card Bot Rules\r\n" +

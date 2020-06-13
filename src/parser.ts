@@ -9,7 +9,7 @@ export const parseMarkdownToRules = (
 
   // Return no rules, if note has invalid heading
   const headingToken = tokens.find((token: any) => token.type === "heading");
-  if (headingToken.text !== "PJ Card Bot Rules") {
+  if (headingToken?.text !== "PJ Card Bot Rules") {
     return [];
   }
 
