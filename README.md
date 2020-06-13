@@ -1,7 +1,5 @@
 # <img src='assets/pj-card-bot-192x192.png' width='32' alt='pj-icon'> PJ Card Bot
 
-⚠️ **This bot doesn't work on Organization yet.**
-
 🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically adding cards of Issue/Pull Request on a Project board.
 
 This bot is inspired by [philschatz/project-bot](https://github.com/philschatz/project-bot).
@@ -14,7 +12,7 @@ Go to the [GitHub App page](https://github.com/apps/pj-card-bot) and click `Inst
 
 Unlike the project-bot, the PJ Card Bot has the following specifications.
 
-- The automation card must be at the bottom of a column.
+- The automation rule card must be at the bottom of a column and set `PJ Card Bot Rules` in the heading.
 - Only three rules can be set, `new_issue`, `new_pullrequest`, and `added_label`.
 - When `added_label`, a new card is added to the project. (This is my motivation for creating this bot.)
 
@@ -23,7 +21,7 @@ Unlike the project-bot, the PJ Card Bot has the following specifications.
 The way to set the Automation Card is almost the same as the project-bot.
 
 ```md
-###### Automation Rules
+###### PJ Card Bot Rules
 
 <!-- Documentation: https://github.com/daido1976/pj-card-bot -->
 

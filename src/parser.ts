@@ -6,6 +6,14 @@ export const parseMarkdownToRules = (
   const rules: { ruleName: string; ruleArgs: string[] }[] = [];
   // FIXME: Update src/@types/marked/index.d.ts & Do not use any type
   const tokens: any = marked.lexer(note);
+
+  // Return no rules, if the note has an invalid heading or no heading
+  // Don't care about depth of heading
+  const headingToken = tokens.find((token: any) => token.type === "heading");
+  if (headingToken?.text !== "PJ Card Bot Rules") {
+    return [];
+  }
+
   const listToken = tokens.find((token: any) => token.type === "list");
 
   listToken.items.forEach((listItem: any) => {
