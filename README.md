@@ -18,7 +18,7 @@ Unlike the project-bot, the PJ Card Bot has the following specifications.
 
 ## Example
 
-The way to set the Automation Card is almost the same as the project-bot.
+The way to set the automation rule card is almost the same as the project-bot.
 
 ```md
 ###### PJ Card Bot Rules
@@ -30,7 +30,7 @@ The way to set the Automation Card is almost the same as the project-bot.
 - `new_issue`
 ```
 
-Now, when the `dependencies` or `security` label is added, a new card is adding to the column where the note is placed.
+Now, when the `dependencies` or `security` label is added, a new card is adding to the column where the rule card is placed.
 And, when the new Pull Request is opened in `repo-name1` or `repo-name2`, a new card is adding to the column in the same way.
 Finally, when the new Issue is opened in any repositories, a new card is adding to the column.
 
