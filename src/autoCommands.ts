@@ -25,6 +25,7 @@ export const autoCommands = [
         const repoName = context.payload.repository.name;
         return ruleArgs.includes(repoName);
       } else {
+        // If no args, apply the rule in any repositories
         return true;
       }
     },
@@ -37,6 +38,7 @@ export const autoCommands = [
         const repoName = context.payload.repository.name;
         return ruleArgs.includes(repoName);
       } else {
+        // If no args, apply the rule in any repositories
         return true;
       }
     },

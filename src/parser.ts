@@ -4,7 +4,7 @@ export const parseMarkdownToRules = (
   note: string
 ): { ruleName: string; ruleArgs: string[] }[] => {
   const rules: { ruleName: string; ruleArgs: string[] }[] = [];
-  // FIXME: Update src/@types/marked/index.d.ts & Do not use any type
+  // FIXME: Update `src/@types/marked/index.d.ts` & Do not use any type
   const tokens: any = marked.lexer(note);
 
   // Return no rules, if the note has an invalid heading or no heading
@@ -21,14 +21,16 @@ export const parseMarkdownToRules = (
       ruleName: "",
       ruleArgs: [],
     };
+
     // 何故か type 'text' が途中に挟まってるので、チェーンして呼び出ししてる
+    const textTokens = listItem.tokens[0].tokens;
+
     // @example textTokens
     // [
     //   { type: "codespan", raw: "`added_label`", text: "added_label" },
     //   { type: "text", raw: " ", text: " " },
     //   { type: "strong", raw: "**wontfix**", text: "wontfix", },
     // ];
-    const textTokens = listItem.tokens[0].tokens;
     textTokens.forEach((token: any) => {
       if (token.type === "codespan") {
         rule.ruleName = token.text;
