@@ -27,11 +27,12 @@ The way to set the Automation Card is almost the same as the project-bot.
 
 - `added_label` **dependencies** **security**
 - `new_pullrequest` **repo-name1** **repo-name2**
-- `new_issue` **repo-name3** **repo-name4**
+- `new_issue`
 ```
 
-Now, when the `dependencies` or `security` label is added, new card is adding to column in which the note is placed.
-And, when the new Pull Request is opened in `repo-name1` or `repo-name2`, new card is adding to column in which the note is placed in the same way.
+Now, when the `dependencies` or `security` label is added, new card is adding to column where the note is placed.
+And, when the new Pull Request is opened in `repo-name1` or `repo-name2`, new card is adding to column in the same way.
+Finaly, when the new Issue is opend in any repositories, new card is adding to column.
 
 ## Development
 
