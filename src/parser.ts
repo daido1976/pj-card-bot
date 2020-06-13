@@ -7,7 +7,7 @@ export const parseMarkdownToRules = (
   // FIXME: Update src/@types/marked/index.d.ts & Do not use any type
   const tokens: any = marked.lexer(note);
 
-  // Return no rules, if note has invalid heading
+  // Return no rules, if the note has an invalid heading or no heading
   const headingToken = tokens.find((token: any) => token.type === "heading");
   if (headingToken?.text !== "PJ Card Bot Rules") {
     return [];
