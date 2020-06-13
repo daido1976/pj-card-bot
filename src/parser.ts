@@ -8,6 +8,7 @@ export const parseMarkdownToRules = (
   const tokens: any = marked.lexer(note);
 
   // Return no rules, if the note has an invalid heading or no heading
+  // Don't care about depth of heading
   const headingToken = tokens.find((token: any) => token.type === "heading");
   if (headingToken?.text !== "PJ Card Bot Rules") {
     return [];
