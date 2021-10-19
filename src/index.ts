@@ -71,8 +71,6 @@ export = (app: Application) => {
         }
       );
 
-      logger.info("repository!!!", repository);
-
       // Organization の時は Owner に紐づく projects、User の時は Repository に紐づく projects を取得する
       //   User の時に Owner に紐づく projects を取得することもできるが、
       //   https://github.com/daido1976?tab=projects のようなユーザに紐づく意図しない projects になってしまう
@@ -94,13 +92,8 @@ export = (app: Application) => {
 
       // User の時も対象の Repository が複数の projects を持つ場合がある
       projects.forEach((project: any) => {
-        logger.info("project!!!", project);
-
         project.columns.nodes.forEach((column: any) => {
-          logger.info("column!!!", column);
-
           const lastCard = column.lastCards.nodes[0];
-          logger.info("lastCard!!!", lastCard);
 
           // note に Markdown 形式で書かれた rules をパースする
           const rules = lastCard?.note
@@ -119,8 +112,6 @@ export = (app: Application) => {
           }
         });
       });
-
-      logger.info("autoRules!!!", autoRules);
 
       for (const { column, ruleArgs } of autoRules) {
         if (ruleMatcher(context, ruleArgs)) {
