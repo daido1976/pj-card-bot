@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "marked": "^1.1.0",
-    "probot": "^3.0.3"
+    "probot": "^9.11.5"
   },
   "devDependencies": {
     "@types/jest": "^25.1.0",
