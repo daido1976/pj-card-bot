@@ -1,3 +1,4 @@
+// TODO: 最小の実装から始めた方が良いかも
 use crate::logger::Logger;
 pub use github_types as types;
 
@@ -205,6 +206,7 @@ async fn verify_request(
         secret.map(|s| HmacSha256::new_from_slice(s.as_bytes()).unwrap());
     let mut buf = Vec::new();
     let mut body = req.into_body();
+    // TODO: もう少しシンプルにできるはず
     while let Some(chunk) = body.next().await {
         let chunk = chunk?;
 
