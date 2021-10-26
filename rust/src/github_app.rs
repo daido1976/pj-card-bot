@@ -89,10 +89,7 @@ pub trait GithubApp: Clone {
     /// Webhook secret must be provided.
     /// This is used to verify that webhook payloads are really coming from GitHub.
     /// See. https://docs.github.com/ja/developers/webhooks-and-events/webhooks/securing-your-webhooks
-    fn webhook_secret(&self) -> Option<&str> {
-        None
-    }
-
+    fn webhook_secret(&self) -> String;
     /// Called when an event is received.
     fn call(&mut self, payload: Event) -> Self::Future;
 }
@@ -113,10 +110,7 @@ impl<T: GithubApp> App<T> {
         mut app: T,
         req: Request<Body>,
     ) -> Result<Response<Body>, hyper::http::Error> {
-        let webhook_secret = app
-            .webhook_secret()
-            .expect("Webhook secret should be provided");
-        let payload = match Self::parse_request(req, webhook_secret).await {
+        let payload = match Self::parse_request(req, app.webhook_secret().as_str()).await {
             Ok(p) => p,
             Err(err) => {
                 return Response::builder()

@@ -1,9 +1,9 @@
 mod github_app;
 mod logger;
 
-use std::io;
 use std::net::SocketAddr;
 use std::pin::Pin;
+use std::{env, io};
 
 use futures::{future, Future};
 use github_app::{Event, GithubApp};
@@ -15,9 +15,8 @@ impl GithubApp for MyApp {
     type Error = io::Error;
     type Future = Pin<Box<dyn Future<Output = Result<(), Self::Error>> + Send>>;
 
-    fn webhook_secret(&self) -> Option<&str> {
-        // TODO: 環境変数から取得させる
-        Some("development")
+    fn webhook_secret(&self) -> String {
+        env::var("WEBHOOK_SECRET").expect("Webhook secret must be provided")
     }
 
     fn call(&mut self, event: Event) -> Self::Future {
