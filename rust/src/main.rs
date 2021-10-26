@@ -9,9 +9,9 @@ use futures::{future, Future};
 use github_app::{Event, GithubApp};
 
 #[derive(Clone)]
-struct MyApp;
+struct PjCardBot;
 
-impl GithubApp for MyApp {
+impl GithubApp for PjCardBot {
     type Error = io::Error;
     type Future = Pin<Box<dyn Future<Output = Result<(), Self::Error>> + Send>>;
 
@@ -29,7 +29,7 @@ impl GithubApp for MyApp {
 async fn main() {
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
 
-    if let Err(err) = github_app::server(&addr, MyApp).await {
+    if let Err(err) = github_app::server(&addr, PjCardBot).await {
         println!("{}", err)
     }
 }
