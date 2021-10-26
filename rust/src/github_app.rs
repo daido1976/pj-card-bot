@@ -27,84 +27,6 @@ use sha2::Sha256;
 use futures::task::{Context, Poll};
 use std::pin::Pin;
 
-/// A trait that a Github app must implement.
-pub trait GithubApp: Clone {
-    type Error: fmt::Display;
-    type Future: Future<Output = Result<(), Self::Error>> + Send;
-
-    /// The secret that was created when the app was created. This is used to
-    /// verify that webhook payloads are really coming from GitHub.
-    ///
-    /// If this returns `None` (the default), then signatures are not verified
-    /// for payloads.
-    fn secret(&self) -> Option<&str> {
-        None
-    }
-
-    /// Called when an event is received.
-    fn call(&mut self, payload: Event) -> Self::Future;
-}
-
-/// Wraps an app in a Hyper service which can be used to run the server.
-pub struct App<T> {
-    app: T,
-}
-
-impl<T> App<T> {
-    pub fn new(app: T) -> Self {
-        App { app }
-    }
-}
-
-impl<T> App<T>
-where
-    T: GithubApp + Sync + Send + 'static,
-{
-    async fn handle_request(
-        mut app: T,
-        req: Request<Body>,
-    ) -> Result<Response<Body>, hyper::http::Error> {
-        let payload = match parse_request(req, app.secret()).await {
-            Ok(p) => p,
-            Err(err) => {
-                return Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body(err.to_string().into())
-            }
-        };
-
-        if let Err(err) = app.call(payload).await {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(err.to_string().into());
-        };
-
-        Response::builder()
-            .status(StatusCode::OK)
-            .body(Body::empty())
-    }
-}
-
-impl<T> Service<Request<Body>> for App<T>
-where
-    T: GithubApp + Sync + Send + 'static,
-{
-    type Response = Response<Body>;
-    type Error = hyper::http::Error;
-    #[allow(clippy::type_complexity)]
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
-
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
-        let app = self.app.clone();
-        let response = Self::handle_request(app, req);
-        Box::pin(response)
-    }
-}
-
 #[derive(From, Display)]
 pub enum PayloadError {
     Hyper(hyper::Error),
@@ -159,105 +81,151 @@ impl From<hyper::http::Error> for Error {
     }
 }
 
-/// Parses a Hyper request for a Github event.
-///
-async fn parse_request(req: Request<Body>, secret: Option<&str>) -> Result<Event, Error> {
-    if req.headers().get(header::CONTENT_TYPE)
-        != Some(&HeaderValue::from_static("application/json"))
-    {
-        return Err(Error::ContentType);
+/// A trait that a Github app must implement.
+pub trait GithubApp: Clone {
+    type Error: fmt::Display;
+    type Future: Future<Output = Result<(), Self::Error>> + Send;
+
+    /// The secret that was created when the app was created. This is used to
+    /// verify that webhook payloads are really coming from GitHub.
+    ///
+    /// If this returns `None` (the default), then signatures are not verified
+    /// for payloads.
+    fn secret(&self) -> Option<&str> {
+        None
     }
 
-    // Parse the event type.
-    let event = req
-        .headers()
-        .get("X-Github-Event")
-        .ok_or(Error::MissingEvent)
-        .and_then(move |header| {
-            from_utf8(header.as_bytes())
-                .map_err(|_| Error::InvalidEvent)
-                .and_then(|s| EventType::from_str(s).map_err(|_| Error::InvalidEvent))
-        })?;
-
-    let buf = verify_request(req, secret).await?;
-
-    parse_event(event, &buf).map_err(Error::from)
+    /// Called when an event is received.
+    fn call(&mut self, payload: Event) -> Self::Future;
 }
 
-/// Verify request.
-///
-/// This handles hmac signature verification to ensure that the payload actually came from Github.
-async fn verify_request(
-    req: Request<Body>,
-    secret: Option<&str>,
-) -> Result<Vec<u8>, crate::github_app::Error> {
-    type HmacSha256 = Hmac<Sha256>;
-    // TODO: uncomment
-    // let signature = req
-    //     .headers()
-    //     .get("X-Hub-Signature-256")
-    //     .ok_or(Error::MissingSignature)
-    //     .and_then(move |header| {
-    //         from_utf8(header.as_bytes())
-    //             .map_err(|_| Error::InvalidSignature)
-    //             .and_then(|s| Signature::from_str(s).map_err(|_| Error::InvalidSignature))
-    //     })?;
-    let mut mac: Option<HmacSha256> =
-        secret.map(|s| HmacSha256::new_from_slice(s.as_bytes()).unwrap());
-    let mut buf = Vec::new();
-    let mut body = req.into_body();
-    // TODO: もう少しシンプルにできるはず
-    while let Some(chunk) = body.next().await {
-        let chunk = chunk?;
+/// Wraps an app in a Hyper service which can be used to run the server.
+pub struct App<T> {
+    app: T,
+}
 
-        if let Some(mac) = mac.as_mut() {
-            mac.update(&chunk);
-        }
-
-        buf.extend(chunk);
+impl<T> App<T> {
+    pub fn new(app: T) -> Self {
+        App { app }
     }
-    // TODO: uncomment
-    // if let Some(mac) = mac {
-    //     mac.verify(signature.digest())?;
-    // }
-    Ok(buf)
 }
 
-fn parse_event(event_type: EventType, slice: &[u8]) -> Result<Event, serde_json::Error> {
-    Ok(match event_type {
-        EventType::Ping => Event::Ping(serde_json::from_slice(slice)?),
-        EventType::CheckRun => Event::CheckRun(serde_json::from_slice(slice)?),
-        EventType::CheckSuite => Event::CheckSuite(serde_json::from_slice(slice)?),
-        EventType::CommitComment => Event::CommitComment(serde_json::from_slice(slice)?),
-        EventType::Create => Event::Create(serde_json::from_slice(slice)?),
-        EventType::Delete => Event::Delete(serde_json::from_slice(slice)?),
-        EventType::GitHubAppAuthorization => {
-            Event::GitHubAppAuthorization(serde_json::from_slice(slice)?)
+impl<T: GithubApp> App<T> {
+    async fn handle_request(
+        mut app: T,
+        req: Request<Body>,
+    ) -> Result<Response<Body>, hyper::http::Error> {
+        let payload = match Self::parse_request(req, app.secret()).await {
+            Ok(p) => p,
+            Err(err) => {
+                return Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(err.to_string().into())
+            }
+        };
+
+        if let Err(err) = app.call(payload).await {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(err.to_string().into());
+        };
+
+        // return 200 ok
+        Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::empty())
+    }
+
+    /// Parses a Hyper request for a Github event.
+    async fn parse_request(req: Request<Body>, secret: Option<&str>) -> Result<Event, Error> {
+        if req.headers().get(header::CONTENT_TYPE)
+            != Some(&HeaderValue::from_static("application/json"))
+        {
+            return Err(Error::ContentType);
         }
-        EventType::Gollum => Event::Gollum(serde_json::from_slice(slice)?),
-        EventType::Installation => Event::Installation(serde_json::from_slice(slice)?),
-        EventType::InstallationRepositories => {
-            Event::InstallationRepositories(serde_json::from_slice(slice)?)
+
+        // Parse the event type.
+        let event = req
+            .headers()
+            .get("X-Github-Event")
+            .ok_or(Error::MissingEvent)
+            .and_then(move |header| {
+                from_utf8(header.as_bytes())
+                    .map_err(|_| Error::InvalidEvent)
+                    .and_then(|s| EventType::from_str(s).map_err(|_| Error::InvalidEvent))
+            })?;
+
+        let buf = Self::verify_request(req, secret).await?;
+
+        Self::parse_event(event, &buf).map_err(Error::from)
+    }
+
+    /// Verify request.
+    ///
+    /// This handles hmac signature verification to ensure that the payload actually came from Github.
+    async fn verify_request(
+        req: Request<Body>,
+        secret: Option<&str>,
+    ) -> Result<Vec<u8>, crate::github_app::Error> {
+        type HmacSha256 = Hmac<Sha256>;
+        // TODO: uncomment
+        // let signature = req
+        //     .headers()
+        //     .get("X-Hub-Signature-256")
+        //     .ok_or(Error::MissingSignature)
+        //     .and_then(move |header| {
+        //         from_utf8(header.as_bytes())
+        //             .map_err(|_| Error::InvalidSignature)
+        //             .and_then(|s| Signature::from_str(s).map_err(|_| Error::InvalidSignature))
+        //     })?;
+        let mut mac: Option<HmacSha256> =
+            secret.map(|s| HmacSha256::new_from_slice(s.as_bytes()).unwrap());
+        let mut buf = Vec::new();
+        let mut body = req.into_body();
+        // TODO: もう少しシンプルにできるはず
+        while let Some(chunk) = body.next().await {
+            let chunk = chunk?;
+
+            if let Some(mac) = mac.as_mut() {
+                mac.update(&chunk);
+            }
+
+            buf.extend(chunk);
         }
-        EventType::IntegrationInstallation => {
-            Event::IntegrationInstallation(serde_json::from_slice(slice)?)
-        }
-        EventType::IntegrationInstallationRepositories => {
-            Event::IntegrationInstallationRepositories(serde_json::from_slice(slice)?)
-        }
-        EventType::IssueComment => Event::IssueComment(serde_json::from_slice(slice)?),
-        EventType::Issues => Event::Issues(serde_json::from_slice(slice)?),
-        EventType::Label => Event::Label(serde_json::from_slice(slice)?),
-        EventType::PullRequest => Event::PullRequest(serde_json::from_slice(slice)?),
-        EventType::PullRequestReview => Event::PullRequestReview(serde_json::from_slice(slice)?),
-        EventType::PullRequestReviewComment => {
-            Event::PullRequestReviewComment(serde_json::from_slice(slice)?)
-        }
-        EventType::Push => Event::Push(serde_json::from_slice(slice)?),
-        EventType::Repository => Event::Repository(serde_json::from_slice(slice)?),
-        EventType::Watch => Event::Watch(serde_json::from_slice(slice)?),
-        _ => panic!("Unimplemented event type: {}", event_type),
-    })
+        // TODO: uncomment
+        // if let Some(mac) = mac {
+        //     mac.verify(signature.digest())?;
+        // }
+        Ok(buf)
+    }
+
+    fn parse_event(event_type: EventType, slice: &[u8]) -> Result<Event, serde_json::Error> {
+        Ok(match event_type {
+            EventType::Issues => Event::Issues(serde_json::from_slice(slice)?),
+            EventType::PullRequest => Event::PullRequest(serde_json::from_slice(slice)?),
+            _ => panic!("Unimplemented event type: {}", event_type),
+        })
+    }
+}
+
+impl<T> Service<Request<Body>> for App<T>
+where
+    T: GithubApp + Sync + Send + 'static,
+{
+    type Response = Response<Body>;
+    type Error = hyper::http::Error;
+    #[allow(clippy::type_complexity)]
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
+        let app = self.app.clone();
+        let response = Self::handle_request(app, req);
+        Box::pin(response)
+    }
 }
 
 /// Webhook signature.
