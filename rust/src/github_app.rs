@@ -86,12 +86,10 @@ pub trait GithubApp: Clone {
     type Error: fmt::Display;
     type Future: Future<Output = Result<(), Self::Error>> + Send;
 
-    /// The secret that was created when the app was created. This is used to
-    /// verify that webhook payloads are really coming from GitHub.
-    ///
-    /// If this returns `None` (the default), then signatures are not verified
-    /// for payloads.
-    fn secret(&self) -> Option<&str> {
+    /// Webhook secret must be provided.
+    /// This is used to verify that webhook payloads are really coming from GitHub.
+    /// See. https://docs.github.com/ja/developers/webhooks-and-events/webhooks/securing-your-webhooks
+    fn webhook_secret(&self) -> Option<&str> {
         None
     }
 
@@ -115,7 +113,10 @@ impl<T: GithubApp> App<T> {
         mut app: T,
         req: Request<Body>,
     ) -> Result<Response<Body>, hyper::http::Error> {
-        let payload = match Self::parse_request(req, app.secret()).await {
+        let webhook_secret = app
+            .webhook_secret()
+            .expect("Webhook secret should be provided");
+        let payload = match Self::parse_request(req, webhook_secret).await {
             Ok(p) => p,
             Err(err) => {
                 return Response::builder()
@@ -137,7 +138,7 @@ impl<T: GithubApp> App<T> {
     }
 
     /// Parses a Hyper request for a Github event.
-    async fn parse_request(req: Request<Body>, secret: Option<&str>) -> Result<Event, Error> {
+    async fn parse_request(req: Request<Body>, webhook_secret: &str) -> Result<Event, Error> {
         if req.headers().get(header::CONTENT_TYPE)
             != Some(&HeaderValue::from_static("application/json"))
         {
@@ -155,7 +156,7 @@ impl<T: GithubApp> App<T> {
                     .and_then(|s| EventType::from_str(s).map_err(|_| Error::InvalidEvent))
             })?;
 
-        let buf = Self::verify_request(req, secret).await?;
+        let buf = Self::verify_request(req, webhook_secret).await?;
 
         Self::parse_event(event, &buf).map_err(Error::from)
     }
@@ -165,7 +166,7 @@ impl<T: GithubApp> App<T> {
     /// This handles hmac signature verification to ensure that the payload actually came from Github.
     async fn verify_request(
         req: Request<Body>,
-        secret: Option<&str>,
+        webhook_secret: &str,
     ) -> Result<Vec<u8>, crate::github_app::Error> {
         type HmacSha256 = Hmac<Sha256>;
 
@@ -178,24 +179,18 @@ impl<T: GithubApp> App<T> {
                     .map_err(|_| Error::InvalidSignature)
                     .and_then(|s| Signature::from_str(s).map_err(|_| Error::InvalidSignature))
             })?;
-        let mut mac: Option<HmacSha256> =
-            secret.map(|s| HmacSha256::new_from_slice(s.as_bytes()).unwrap());
+        let mut mac = HmacSha256::new_from_slice(webhook_secret.as_bytes())
+            .expect("HMAC can take key of any size");
         let mut buf = Vec::new();
         let mut body = req.into_body();
-        // TODO: もう少しシンプルにできるはず
+        // TODO: chunk に分けずに一気にできないか
         while let Some(chunk) = body.next().await {
             let chunk = chunk?;
-
-            if let Some(mac) = mac.as_mut() {
-                mac.update(&chunk);
-            }
-
+            mac.update(&chunk);
             buf.extend(chunk);
         }
 
-        if let Some(mac) = mac {
-            mac.verify(signature.digest())?;
-        }
+        mac.verify(signature.digest())?;
         Ok(buf)
     }
 
