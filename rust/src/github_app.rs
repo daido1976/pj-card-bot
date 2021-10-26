@@ -113,19 +113,21 @@ impl<T: GithubApp> App<T> {
         let payload = match Self::parse_request(req, app.webhook_secret().as_str()).await {
             Ok(p) => p,
             Err(err) => {
+                // return 400 when failed to verify request
                 return Response::builder()
                     .status(StatusCode::BAD_REQUEST)
-                    .body(err.to_string().into())
+                    .body(err.to_string().into());
             }
         };
 
         if let Err(err) = app.call(payload).await {
+            // return 500 when occured error in GithubApp::call
             return Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(err.to_string().into());
         };
 
-        // return 200 ok
+        // return 200
         Response::builder()
             .status(StatusCode::OK)
             .body(Body::empty())
