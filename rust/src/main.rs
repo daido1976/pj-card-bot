@@ -15,6 +15,11 @@ impl GithubApp for MyApp {
     type Error = io::Error;
     type Future = Pin<Box<dyn Future<Output = Result<(), Self::Error>> + Send>>;
 
+    fn secret(&self) -> Option<&str> {
+        // TODO: 環境変数から取得させる
+        Some("development")
+    }
+
     fn call(&mut self, event: Event) -> Self::Future {
         println!("{:#?}", event);
         Box::pin(future::ok(()))

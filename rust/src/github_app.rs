@@ -168,16 +168,16 @@ impl<T: GithubApp> App<T> {
         secret: Option<&str>,
     ) -> Result<Vec<u8>, crate::github_app::Error> {
         type HmacSha256 = Hmac<Sha256>;
-        // TODO: uncomment
-        // let signature = req
-        //     .headers()
-        //     .get("X-Hub-Signature-256")
-        //     .ok_or(Error::MissingSignature)
-        //     .and_then(move |header| {
-        //         from_utf8(header.as_bytes())
-        //             .map_err(|_| Error::InvalidSignature)
-        //             .and_then(|s| Signature::from_str(s).map_err(|_| Error::InvalidSignature))
-        //     })?;
+
+        let signature = req
+            .headers()
+            .get("X-Hub-Signature-256")
+            .ok_or(Error::MissingSignature)
+            .and_then(move |header| {
+                from_utf8(header.as_bytes())
+                    .map_err(|_| Error::InvalidSignature)
+                    .and_then(|s| Signature::from_str(s).map_err(|_| Error::InvalidSignature))
+            })?;
         let mut mac: Option<HmacSha256> =
             secret.map(|s| HmacSha256::new_from_slice(s.as_bytes()).unwrap());
         let mut buf = Vec::new();
@@ -192,10 +192,10 @@ impl<T: GithubApp> App<T> {
 
             buf.extend(chunk);
         }
-        // TODO: uncomment
-        // if let Some(mac) = mac {
-        //     mac.verify(signature.digest())?;
-        // }
+
+        if let Some(mac) = mac {
+            mac.verify(signature.digest())?;
+        }
         Ok(buf)
     }
 
@@ -208,6 +208,7 @@ impl<T: GithubApp> App<T> {
     }
 }
 
+// See. https://docs.rs/tower-service/0.3.1/tower_service/trait.Service.html#server
 impl<T> Service<Request<Body>> for App<T>
 where
     T: GithubApp + Sync + Send + 'static,
@@ -252,8 +253,7 @@ impl FromStr for Signature {
 
         match (splits.next(), splits.next()) {
             (Some(method), Some(digest)) => {
-                // GitHub doesn't use anything else besides sha1 at the moment.
-                if method != "sha1" {
+                if method != "sha256" {
                     return Err(());
                 }
 
